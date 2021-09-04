@@ -1,0 +1,215 @@
+# include "utility.h"
+
+void towerOfHanoi(int n,char from,char to,char aux)
+{
+    if (n == 1)
+    {
+        cout<<"Move disk from "<<from<<" to "<<to<<"."<<endl;
+
+        return ;
+    }
+
+    towerOfHanoi(n-1,from,aux,to);
+
+    cout<<"Move disk from "<<from<<" to "<<to<<"."<<endl;
+
+    towerOfHanoi(n-1,aux,to, from);
+}
+
+void HanoiRecursion(int n)
+{
+    towerOfHanoi(n,'A','C','B');
+}
+
+class Disc
+{
+    char location;
+    int size;
+
+public:
+
+    int getLocation() {return location;}
+    int getSize() {return size;}
+
+    void setLocation(char l) {location = l;}
+    void setSize(int s) {size = s;}
+
+    bool IsLocation(char l) {return l == location;}
+    bool IsSize(int s) {return s == size;}
+};
+
+class Game
+{
+
+public:
+
+    vector <Disc> Discs;
+    vector <string> Steps;
+
+    Game(int n);
+
+    int getSmallestDiscSizeInLocation(char l);
+
+    bool IsEmptyLocation(char l);
+    bool IsSolved();
+
+    bool IsCanMoveDisc(Disc d,char l1,char l2);
+    bool MoveDisc(Disc &d,char l1,char l2);
+
+    void Print();
+    void PrintSteps();
+};
+
+Game::Game(int n)
+{
+    for(int i=1;i<=n;i++)
+    {
+        Disc d;
+
+        d.setLocation('A');
+        d.setSize(i);
+
+        Discs.push_back(d);
+    }
+}
+
+int Game::getSmallestDiscSizeInLocation(char l)
+{
+    int smallest_size = 999999;
+
+    if(!IsEmptyLocation(l))
+    {
+        for(int i=0;i<Discs.size();i++)
+        {
+            if(Discs[i].IsLocation(l) and smallest_size > Discs[i].getSize()) smallest_size = Discs[i].getSize();
+        }
+
+        return smallest_size;
+    }
+    else return 0;
+}
+
+bool Game::IsEmptyLocation(char l)
+{
+    for(int i=0;i<Discs.size();i++) if(Discs[i].IsLocation(l)) return false;
+
+    return true;
+}
+
+bool Game::IsSolved()
+{
+    for(int i=0;i<Discs.size();i++) if(!Discs[i].IsLocation('C')) return false;
+
+    return true;
+}
+
+bool Game::IsCanMoveDisc(Disc d,char l1,char l2)
+{
+    if(d.IsLocation(l1) and l1 != l2 and getSmallestDiscSizeInLocation(l1) == d.getSize() and (getSmallestDiscSizeInLocation(l2) > d.getSize() or IsEmptyLocation(l2))) return true;
+
+    return false;
+}
+
+bool Game::MoveDisc(Disc &d,char l1,char l2)
+{
+    if(IsCanMoveDisc(d,l1,l2))
+    {
+        d.setLocation(l2);
+
+        return true;
+    }
+
+    return false;
+}
+
+void Game::Print()
+{
+    for(int i=0;i<Discs.size();i++)
+    {
+        string s(1,Discs[i].getLocation());
+        cout<<"Disc "<<Discs[i].getSize()<<" is in "<<s<<endl;
+    }
+}
+
+void Game::PrintSteps()
+{
+    cout<<Steps<<endl;
+}
+
+bool AreGamesEqual(Game g1,Game g2)
+{
+    if(g1.Discs.size() != g2.Discs.size()) return false;
+
+    for(int i=0;i<g1.Discs.size();i++)
+    {
+        if(g1.Discs[i].getSize() == g2.Discs[i].getSize() and g1.Discs[i].getLocation() != g2.Discs[i].getLocation()) return false;
+    }
+
+    return true;
+}
+
+vector <Game> Matrix;
+
+bool IsMatrixHasEqualMove(Game g)
+{
+    for(int i=0;i<Matrix.size();i++)
+    {
+        if(AreGamesEqual(Matrix[i],g)) return true;
+    }
+
+    return false;
+}
+
+void Try(Game g)
+{
+    int step = 0;
+    Game g1(g.Discs.size());
+    Matrix.push_back(g);
+
+    while(!Matrix[step].IsSolved())
+    {
+        for(char l1='A';l1<='C';l1++)
+        {
+            for(char l2='A';l2<='C';l2++)
+            {
+                for(int i=0;i<Matrix[step].Discs.size();i++)
+                {
+                    g1 = Matrix[step];
+
+                    if(g1.MoveDisc(g1.Discs[i],l1,l2))
+                    {
+                        string s1(1,l1);
+                        string s2(1,l2);
+                        string s = "Move disc from " + s1 + " to " + s2 + ".";
+
+                        g1.Steps.push_back(s);
+
+                        if(!IsMatrixHasEqualMove(g1)) Matrix.push_back(g1);
+                    }
+                }
+            }
+        }
+
+        step++;
+    }
+
+    Matrix[step].PrintSteps();
+}
+
+void HanoiNoRecursion(int n)
+{
+    Game g(n);
+
+    Try(g);
+}
+
+int main()
+{
+    cout<<"Hanoi with No Recursion: "<<endl;
+    HanoiNoRecursion(3);
+
+    cout<<"Hanoi with Recursion:"<<endl;
+    HanoiRecursion(3);
+
+    return 0;
+}
